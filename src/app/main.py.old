@@ -1,0 +1,82 @@
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi_utils.cbv import cbv
+from fastapi_utils.inferring_router import InferringRouter
+import numpy as np
+import cv2
+import time
+import uvicorn
+
+app = FastAPI()
+router = InferringRouter()
+templates = Jinja2Templates(directory='app/templates')
+
+@cbv(router)
+class FAPI:
+    def __init__(self):
+        self.stream = 'Waiting stream connect'
+
+    def gen_frames(self, stream):
+        i = 0
+        while True:
+            img = np.zeros((640, 1080, 3), np.uint8) * 188
+            cv2.putText(img, f'{stream} {i}', (130, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 3)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img_encode = cv2.imencode('.jpg', img)[1]
+            img_byte = img_encode.tobytes()
+            yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + img_byte + b'\r\n')
+            i += 1
+            time.sleep(1)
+
+    @router.get('/', response_class=HTMLResponse)
+    async def home(self, request : Request):
+        return templates.TemplateResponse('page.html', {'request' : request})
+    
+    @router.get('/video_feed')
+    async def video_cap(self, stream = Form()):
+        # if stream == None:
+        #     return StreamingResponse(self.gen_frames('Waiting stream connect'), media_type='multipart/x-mixed-replace; boundary=frame')
+        # else:
+        return StreamingResponse(self.gen_frames(stream), media_type='multipart/x-mixed-replace; boundary=frame')
+    
+    @router.post('/postdata')
+    async def streamer(self, requst : Request, stream = Form()):
+        self.stream = stream
+        return templates.TemplateResponse('page.html', {'request' : requst})
+
+app.include_router(router)
+# app = FastAPI()
+# templates = Jinja2Templates(directory="app/templates")
+
+# sto = 'Waiting stream connect'
+
+# def gen_frames(st):
+#     i = 0
+#     while True:
+#         img = np.zeros((640, 1080, 3), np.uint8) * 188
+#         cv2.putText(img, f'{st} {i}', (130, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 3)
+#         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#         img_encode = cv2.imencode('.jpg', img)[1]
+#         img_byte = img_encode.tobytes()
+#         yield (b'--frame\r\n'
+#                 b'Content-Type: image/jpeg\r\n\r\n' + img_byte + b'\r\n')
+#         i += 1
+#         time.sleep(1)
+
+# @app.get('/', response_class=HTMLResponse)
+# async def home(request : Request):
+#     return templates.TemplateResponse('page.html', {'request' : request})
+
+# @app.get('/video_feed')
+# async def video_cap():
+#     return StreamingResponse(gen_frames(sto), media_type='multipart/x-mixed-replace; boundary=frame')
+
+# @app.post('/postdata')
+# def stream(stream = Form()):
+#     return StreamingResponse(gen_frames(stream), media_type='multipart/x-mixed-replace; boundary=frame')
+
+if __name__ == '__main__':
+    uvicorn.run(app, host='127.0.0.1', port=8080)
