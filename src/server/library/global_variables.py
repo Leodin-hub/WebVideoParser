@@ -1,0 +1,2 @@
+BOOSTRAP_PORT_KAFKA = ['localhost:9092']
+DIRECTORY_TEMPLATES = 'templates'
