@@ -42,9 +42,7 @@ class Reading:
                     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     frame_encode = cv2.imencode('.jpg', frame)[1]
                     s = self.redis.set(frame_encode.tobytes())
-                    self.producer.send('stream', bytes(s, 'utf-8'))
-                    await asyncio.sleep(0.02)
-                    self.producer.send('detection', bytes(s, 'utf-8'))
+                    self.producer.send('stream', bytes(s, 'utf-8'), timestamp_ms=1000)
             await asyncio.sleep(0.03)
 
 

@@ -34,7 +34,9 @@ async def video_feed():
 
 @app.post('/postdata')
 def post_data(request: Request, stream: str = Form()):
-    producer.send('url_video', value=bytes(stream, 'utf-8'))
+    if stream is None:
+        stream = ''
+    producer.send('url_video', value=bytes(stream, 'utf-8'), timestamp_ms=1000)
     return templates.TemplateResponse('page.html', {'request': request})
 
 

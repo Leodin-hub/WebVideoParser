@@ -1,14 +1,29 @@
-import sys
-sys.path.append('../server')
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
-from moduls.model_yolo import Model
 from redis import Redis
+# import numpy as np
+# import yolov5
+# import cv2
 
 # Set up Redis connection
-r = Redis(host='localhost', port=6379, db=0)
-model = Model()
+# r = Redis(host='localhost', port=6379, db=0)
+# model = yolov5.load('moduls/yolov5s.pt')
+# model.conf = 0.25
+# model.iou = 0.45
+# model.agnostic = False
+# model.multi_label = False
+# model.max_det = 1000
+
+
+# def render(img):
+#     img = np.frombuffer(img, np.uint8)
+#     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
+#     frame = model(img)
+#     frame.render()
+#     buffer = cv2.imencode('.jpg', img)[1]
+#     return buffer.tobytes()
+
 
 # Set up Spark session
 spark = SparkSession.builder \
@@ -27,9 +42,11 @@ df = spark \
 
 # Define function to process frames
 def process_frame(frame_id):
-    frame = r.get(frame_id)
-    detected_frame = model.render(frame)
-    r.set(frame_id, detected_frame)
+    # r = Redis(host='localhost', port=6379, db=0)
+    # frame = r.get(frame_id)
+    # # detected_frame = render(frame)
+    # detected_frame = frame
+    # r.set(frame_id, detected_frame)
     return frame_id
 
 
@@ -47,34 +64,9 @@ processed_df \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
     .option("topic", "detection") \
+    .option('timestamp_ms', '1000') \
     .option("checkpointLocation", "/tmp/checkpoint") \
     .start()
+    # .awaitTermination()
 
 spark.streams.awaitAnyTermination()
-# import sys
-# sys.path.append('../server')
-# from kafka import KafkaProducer, KafkaConsumer
-# from moduls.redis_connect import RedisConnect
-# from moduls.model_yolo import Model
-# import asyncio
-#
-# class Detector:
-#     def __init__(self):
-#         self.consumer = KafkaConsumer('stream', group_id='group2', bootstrap_servers=['localhost:9092'],
-#                                       auto_offset_reset='earliest')
-#         self.redis = RedisConnect(False)
-#         self.model = Model()
-#
-#     async def detection(self):
-#         while True:
-#             msg = self.consumer.poll()
-#             if msg:
-#                 value = ''
-#                 for m in msg:
-#                     value = msg[m][0].value.decode('utf-8')
-#                 img = self.redis.get(value)
-#                 if img is not None:
-#                     img = self.model.render(img)
-#                     self.redis.set(img, value)
-#                     print(f'Detection {value}')
-#             await asyncio.sleep(0.01)
