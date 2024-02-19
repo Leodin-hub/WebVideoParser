@@ -1,5 +1,6 @@
-import cv2
+import numpy as np
 import yolov5
+import cv2
 
 
 class Model:
@@ -12,9 +13,9 @@ class Model:
         self.model.max_det = 1000
 
     def render(self, img):
+        img = np.frombuffer(img, np.uint8)
+        img = cv2.imdecode(img, cv2.IMREAD_COLOR)
         frame = self.model(img)
         frame.render()
-        ret, buffer = cv2.imencode('.jpg', img)
-        img = buffer.tobytes()
-        return (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
+        buffer = cv2.imencode('.jpg', img)[1]
+        return buffer.tobytes()

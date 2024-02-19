@@ -1,8 +1,6 @@
 import sys
 sys.path.append('../server')
 from kafka import KafkaProducer, KafkaConsumer
-from moduls.camera import Camera
-from moduls.redis_connect import RedisConnect
 
 
 class KafkaBase:

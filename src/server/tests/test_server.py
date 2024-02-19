@@ -17,7 +17,7 @@ async def gen_frames():
     while True:
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + img_byte + b'\r\n')
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1.5)
 
 
 @app.get('/')

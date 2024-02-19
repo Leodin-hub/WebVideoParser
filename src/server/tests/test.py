@@ -1,44 +1,16 @@
-import asyncio
-import random
-import sys
-import time
+import matplotlib.pyplot as plt
+import numpy as np
+import cv2
 
-
-async def g():
-    it = 0
-    while True:
-        print(it)
-        it += 1
-        await asyncio.sleep(random.random())
-        # time.sleep(random.random())
-
-
-async def h():
-    it = 1000
-    while True:
-        print(it)
-        it -= 1
-        await asyncio.sleep(random.random())
-        # time.sleep(random.random())
-
-
-async def wait():
-    while True:
-        print('Wait')
-        await asyncio.sleep(0.2)
-
-
-async def b():
-    try:
-        task1 = asyncio.create_task(g())
-        task2 = asyncio.create_task(h())
-        task3 = asyncio.create_task(wait())
-        while True:
-            await task1
-            await task2
-            await task3
-    except KeyboardInterrupt:
-        sys.exit()
-
-if __name__ == '__main__':
-    asyncio.run(b())
+img = np.zeros((640, 1080, 3), np.uint8)
+cv2.putText(img, 'text', (475, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 3)
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+plt.imshow(img)
+plt.show()
+img_encode = cv2.imencode('.jpg', img)[1]
+print(f'img: {img.size}, encode: {img_encode.size}')
+img_bytes = img_encode.tobytes()
+ing = np.frombuffer(img_bytes, dtype=np.uint8)
+a = cv2.imdecode(ing, cv2.IMREAD_COLOR)
+plt.imshow(a)
+plt.show()

@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 import asyncio
 import cv2
@@ -25,8 +23,11 @@ class Camera:
             self.camera = cv2.VideoCapture(url_video)
             self.url_connect = url_video
 
-    def stream(self):
+    async def stream(self):
         while True:
             success, frame = self.camera.read()
             if success:
                 yield frame.tobytes()
+            else:
+                yield None
+            await asyncio.sleep(0.01)
