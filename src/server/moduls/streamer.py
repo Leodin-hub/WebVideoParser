@@ -35,4 +35,4 @@ class Streamer:
                     self.img = img
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + self.img + b'\r\n')
-            await asyncio.sleep(0.03)
+            await asyncio.sleep(0.02)

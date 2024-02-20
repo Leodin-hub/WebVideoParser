@@ -1,3 +1,4 @@
+from yolov5 import detect
 import numpy as np
 import yolov5
 import cv2

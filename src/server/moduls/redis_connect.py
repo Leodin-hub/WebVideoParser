@@ -3,8 +3,7 @@ from redis import Redis
 
 class RedisConnect:
     def __init__(self, reader: bool):
-        self.connect_redis = Redis(host='localhost',
-                                   port=6379, db=0)
+        self.connect_redis = Redis(host='localhost', port=6379, db=0)
         if reader:
             self.connect_redis.flushall()
         self.id_last_img = 0

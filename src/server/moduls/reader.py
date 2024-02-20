@@ -31,7 +31,7 @@ class Reading:
                     value = msg[m][0].value.decode('utf-8')
                 self.camera = cv2.VideoCapture(value)
                 print(f'Url video stream: {value}\nConnect is: {self.camera.isOpened()}')
-            await asyncio.sleep(0.03)
+            await asyncio.sleep(0.01)
 
     async def read_stream(self):
         print('start read stream')
@@ -43,7 +43,7 @@ class Reading:
                     frame_encode = cv2.imencode('.jpg', frame)[1]
                     s = self.redis.set(frame_encode.tobytes())
                     self.producer.send('stream', bytes(s, 'utf-8'), timestamp_ms=1000)
-            await asyncio.sleep(0.03)
+            await asyncio.sleep(0.01)
 
 
 # if __name__ == '__main__':

@@ -1,53 +1,13 @@
-import sys
-sys.path.append('../server')
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import udf
-from pyspark.sql.types import StringType
-from redis import Redis
-from moduls.model_yolo import Model
-from yolov5 import detect
+from kafka import KafkaProducer, KafkaConsumer
 
-# Set up Redis connection
-r = Redis(host='localhost', port=6379, db=0)
-model = Model()
+producer = KafkaProducer(bootstrap_servers=['localhost:9092'])
+consumer = KafkaConsumer('decode', group_id='group2', bootstrap_servers=['localhost:9092'],
+                         auto_offset_reset='earliest')
 
-# Set up Spark session
-spark = SparkSession.builder \
-    .appName("KafkaSparkYOLOv5") \
-    .getOrCreate()
+# for i in range(10):
+#     producer.send('stream', bytes(str(i), 'utf-8'))
 
-# Read data from Kafka topic
-df = spark \
-    .readStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", "input_topic") \
-    .load()
-
-
-# Define function to process frames
-def process_frame(frame_id):
-    frame = r.get(frame_id)
-    detected_frame = model.render(frame)
-    r.set(frame_id, detected_frame)
-    return frame_id
-
-
-process_frame_udf = udf(process_frame, StringType())
-
-# Apply processing function to each message in the Kafka stream
-processed_df = df \
-    .selectExpr("CAST(value AS STRING) as frame_id") \
-    .withColumn("detected_frame_id", process_frame_udf("frame_id"))
-
-# Write processed frames back to another Kafka topic
-processed_df \
-    .selectExpr("detected_frame_id AS key", "detected_frame_id AS value") \
-    .writeStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("topic", "stream") \
-    .option("checkpointLocation", "/tmp/checkpoint") \
-    .start()
-
-spark.streams.awaitAnyTermination()
+while True:
+    i = consumer.__next__()
+    if i:
+        print(i.value.decode('utf-8'))
