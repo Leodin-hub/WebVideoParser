@@ -1,27 +1,19 @@
 import sys
 sys.path.append('../server')
-from moduls.redis_connect import RedisConnect
-from kafka import KafkaConsumer
-import numpy as np
+from library.helpers.redis_connect import RedisConnect
+from library.helpers.kafka_function import get_consumer
+from library.global_variables import gen_img
 import asyncio
-import cv2
-
-
-def gen_img(text: str):
-    img = np.zeros((640, 1080, 3), np.uint8)
-    cv2.putText(img, text, (160, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 3)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img_encode = cv2.imencode('.jpg', img)[1]
-    img_bytes = img_encode.tobytes()
-    return img_bytes
 
 
 class Streamer:
     def __init__(self):
-        self.consumer = KafkaConsumer('detection', group_id='group3', bootstrap_servers=['localhost:9092'],
-                                      auto_offset_reset='earliest')
+        self.consumer = get_consumer('detection')
         self.redis = RedisConnect(False)
         self.img = gen_img('Wait to stream')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.consumer.unsubscribe()
 
     async def get_img(self):
         while True:

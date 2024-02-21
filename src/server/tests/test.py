@@ -1,4 +1,7 @@
-from kafka import KafkaProducer, KafkaConsumer
+from kafka import KafkaAdminClient, KafkaProducer, KafkaConsumer
+
+admin = KafkaAdminClient(bootstrap_servers="localhost:9092")
+admin.delete_topics()
 
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'])
 consumer = KafkaConsumer('decode', group_id='group2', bootstrap_servers=['localhost:9092'],

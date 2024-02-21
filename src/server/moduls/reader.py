@@ -1,18 +1,20 @@
 import sys
 sys.path.append('../server')
-from kafka import KafkaProducer, KafkaConsumer
-from moduls.redis_connect import RedisConnect
+from library.helpers.redis_connect import RedisConnect
+from library.helpers.kafka_function import get_producer, get_consumer
 import asyncio
 import cv2
 
 
 class Reading:
     def __init__(self):
-        self.producer = KafkaProducer(bootstrap_servers=['localhost:9092'])
-        self.consumer = KafkaConsumer('url_video', group_id='group1', bootstrap_servers=['localhost:9092'],
-                                      auto_offset_reset='earliest')
+        self.producer = get_producer()
+        self.consumer = get_consumer('url_video')
         self.redis = RedisConnect(True)
         self.camera = cv2.VideoCapture()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.consumer.unsubscribe()
 
     async def start(self):
         print('start reader')
@@ -44,11 +46,3 @@ class Reading:
                     s = self.redis.set(frame_encode.tobytes())
                     self.producer.send('stream', bytes(s, 'utf-8'), timestamp_ms=1000)
             await asyncio.sleep(0.01)
-
-
-# if __name__ == '__main__':
-#     reader = Reading()
-#     try:
-#         asyncio.run(reader.start())
-#     except KeyboardInterrupt:
-#         sys.exit()
