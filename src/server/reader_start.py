@@ -4,12 +4,14 @@ import sys
 
 
 def main():
+    """External reader runner function
+    """
     reader = Reading()
-    try:
-        asyncio.run(reader.start())
-    except KeyboardInterrupt:
-        sys.exit()
+    asyncio.run(reader.start())
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit()

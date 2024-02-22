@@ -7,6 +7,14 @@ RUN_PORT = {'host': '127.0.0.1', 'port': 8080}
 
 
 def gen_img(text: str):
+    """Generates an image with the specified text.
+
+    Args:
+        text: The text to be displayed on the generated image.
+
+    Returns:
+        img_bytes: The byte representation of the generated image in JPEG format.
+    """
     img = np.zeros((640, 1080, 3), np.uint8)
     cv2.putText(img, text, (160, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 3)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

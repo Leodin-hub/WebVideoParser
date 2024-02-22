@@ -4,12 +4,14 @@ import sys
 
 
 def main():
+    """External detector runner function
+    """
     detect = SparkDetector()
-    try:
-        asyncio.run(detect.run())
-    except KeyboardInterrupt:
-        sys.exit()
+    asyncio.run(detect.run())
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit()
