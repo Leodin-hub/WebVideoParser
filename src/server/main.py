@@ -2,9 +2,11 @@ from detector_start import main as detector_start
 from server_start import main as server_start
 from reader_start import main as reader_start
 from multiprocessing import Process
+from loguru import logger
 import sys
 
 
+@logger.catch(level='INFO')
 def main():
     """The main function that runs the entire project
     """

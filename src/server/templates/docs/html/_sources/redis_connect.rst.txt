@@ -1,0 +1,8 @@
+redis\_connect module
+===========
+
+.. automodule:: redis_connect
+   :members:
+   :undoc-members:
+   :special-members:
+   :show-inheritance:

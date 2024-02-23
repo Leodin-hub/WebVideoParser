@@ -1,0 +1,10 @@
+starters
+====
+
+.. toctree::
+    :maxdepth: 4
+
+    detector_start
+    main
+    reader_start
+    server_start

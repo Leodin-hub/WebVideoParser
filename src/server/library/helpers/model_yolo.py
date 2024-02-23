@@ -1,3 +1,4 @@
+from loguru import logger
 import numpy as np
 import yolov5
 import cv2
@@ -18,6 +19,7 @@ class Model:
         __init__: Initializes the Model class with default YOLOv5 model parameters.
         render: Processes an image using the YOLOv5 model and returns the processed image buffer.
     """
+    @logger.catch(level='INFO')
     def __init__(self):
         """Initializes the Model class with default YOLOv5 model parameters.
         """
@@ -28,6 +30,7 @@ class Model:
         self.model.multi_label = False
         self.model.max_det = 1000
 
+    @logger.catch(level='INFO')
     def render(self, img):
         """Processes an image using the YOLOv5 model and returns the processed image buffer.
 

@@ -1,0 +1,9 @@
+server module
+===========
+
+.. automodule:: server
+   :members:
+   :undoc-members:
+   :private-members:
+   :special-members:
+   :show-inheritance:

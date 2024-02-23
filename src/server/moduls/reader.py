@@ -1,7 +1,8 @@
 import sys
 sys.path.append('../server')
-from library.helpers.redis_connect import RedisConnect
 from library.helpers.kafka_function import get_producer, get_consumer
+from library.helpers.redis_connect import RedisConnect
+from loguru import logger
 import asyncio
 import cv2
 
@@ -21,6 +22,7 @@ class Reading:
         waiting_for_stream(self): Continuously waits for available video stream URLs from the consumer.
         read_stream(self): Reads frames from the video stream, processes and sends them using the producer.
     """
+    @logger.catch(level='INFO')
     def __init__(self):
         """Initialize the Reading class with necessary attributes.
 
@@ -29,9 +31,13 @@ class Reading:
         """
         self.producer = get_producer()
         self.consumer = get_consumer('url_video')
+        if self.producer is None or self.consumer is None:
+            logger.critical('Kafka could not connect to the image')
+            sys.exit()
         self.redis = RedisConnect(True)
         self.camera = cv2.VideoCapture()
 
+    @logger.catch(level='INFO')
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Unsubscribe the consumer when exiting the context management block.
 
@@ -45,25 +51,25 @@ class Reading:
         """
         self.consumer.unsubscribe()
 
+    @logger.catch(level='INFO')
     async def start(self):
         """Start reading and processing the video stream frames.
 
         The start method initiates the reading and processing of video stream frames. It creates
         and runs asynchronous tasks for waiting for stream URLs and reading the frames.
         """
-        print('start reader')
-        task_waiting = asyncio.create_task(self.waiting_for_stream())
-        task_stream = asyncio.create_task(self.read_stream())
+        task_waiting = asyncio.create_task(self.__waiting_for_stream())
+        task_stream = asyncio.create_task(self.__read_stream())
         await task_waiting
         await task_stream
 
-    async def waiting_for_stream(self):
+    @logger.catch(level='INFO')
+    async def __waiting_for_stream(self):
         """Continuously wait for video stream URLs from the consumer.
 
         This method continuously polls the consumer for available video stream URLs. When a new URL is received,
         it updates the VideoCapture object with the new stream and checks the connection status.
         """
-        print('start waiting for stream')
         while True:
             msg = self.consumer.poll()
             if msg:
@@ -71,10 +77,13 @@ class Reading:
                 for m in msg:
                     value = msg[m][0].value.decode('utf-8')
                 self.camera = cv2.VideoCapture(value)
-                print(f'Url video stream: {value}\nConnect is: {self.camera.isOpened()}')
+                logger.info(f'Url video stream: {value}\nConnect is: {self.camera.isOpened()}')
+                if not self.camera.isOpened():
+                    logger.critical(f'The camera at the {value} could not connect, check the link')
             await asyncio.sleep(0.01)
 
-    async def read_stream(self):
+    @logger.catch(level='INFO')
+    async def __read_stream(self):
         """Read frames from the video stream and process them.
 
         The read_stream method reads frames from the video stream, converts them to RGB format,

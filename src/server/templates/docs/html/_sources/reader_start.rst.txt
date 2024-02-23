@@ -1,0 +1,7 @@
+reader\_start module
+===========
+
+.. automodule:: reader_start
+   :members:
+   :undoc-members:
+   :show-inheritance:

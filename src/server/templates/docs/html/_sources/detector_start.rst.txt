@@ -1,0 +1,7 @@
+detector\_start module
+===========
+
+.. automodule:: detector_start
+   :members:
+   :undoc-members:
+   :show-inheritance:

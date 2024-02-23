@@ -1,15 +1,15 @@
 import sys
 sys.path.append('../server')
-from library.global_variables import PORT_KAFKA
 from kafka import KafkaAdminClient, KafkaProducer, KafkaConsumer
+from library.global_variables import PORT_KAFKA
 from kafka.admin import NewTopic
+from loguru import logger
 
 
 def delete_topic():
     admin = KafkaAdminClient(bootstrap_servers=PORT_KAFKA)
     topics = admin.list_topics()
-    for topic in topics:
-        admin.delete_topics(topics=topic)
+    admin.delete_topics(topics=topics)
     admin.close()
 
 
@@ -21,9 +21,11 @@ def init_topic():
     admin.close()
 
 
+@logger.catch(level='INFO')
 def get_producer():
     return KafkaProducer(bootstrap_servers=[PORT_KAFKA])
 
 
+@logger.catch(level='INFO')
 def get_consumer(topic: str):
     return KafkaConsumer(topic, bootstrap_servers=[PORT_KAFKA], auto_offset_reset='earliest')

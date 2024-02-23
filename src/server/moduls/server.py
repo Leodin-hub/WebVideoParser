@@ -1,14 +1,19 @@
+import os
 import sys
+
 sys.path.append('../server')
-from fastapi.responses import StreamingResponse
-from fastapi.templating import Jinja2Templates
-from fastapi import FastAPI, Request, Form
-from fastapi_utils.cbv import cbv
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi_utils.inferring_router import InferringRouter
+from library.helpers.kafka_function import get_producer, delete_topic, init_topic
+from fastapi.templating import Jinja2Templates
+from kafka.errors import NoBrokersAvailable
+from fastapi import FastAPI, Request, Form
 from moduls.streamer import Streamer
-from library.helpers.kafka_function import get_producer  # , delete_topic, init_topic
+from fastapi_utils.cbv import cbv
+from loguru import logger
 
 
+@logger.catch(level='INFO')
 def run_server():
     """Function to run a FastAPI server application.
 
@@ -17,17 +22,27 @@ def run_server():
     """
     app = FastAPI()
     router = InferringRouter()
+    try:
+        delete_topic()
+        init_topic()
+    except NoBrokersAvailable:
+        logger.critical('Kafka could not connect to the image')
+        sys.exit()
 
     @cbv(router)
     class MainServer:
         """Class defining endpoints for handling requests and streaming video."""
+
+        @logger.catch(level='INFO')
         def __init__(self):
             """Initialize MainServer class with necessary attributes."""
             self.templates = Jinja2Templates(directory='templates')
             self.streamer = Streamer()
             self.producer = get_producer()
 
+
         @router.get('/')
+        @logger.catch(level='INFO')
         def home(self, request: Request):
             """Endpoint for displaying the home page.
 
@@ -40,6 +55,7 @@ def run_server():
             return self.templates.TemplateResponse('page.html', {'request': request})
 
         @router.get('/video_feed')
+        @logger.catch(level='INFO')
         async def video_feed(self):
             """Endpoint for streaming video frames.
 
@@ -49,6 +65,7 @@ def run_server():
             return StreamingResponse(self.streamer.get_img(), media_type='multipart/x-mixed-replace; boundary=frame')
 
         @router.post('/postdata')
+        @logger.catch(level='INFO')
         def post_data(self, request: Request, stream: str = Form()):
             """Endpoint for posting data to a Kafka producer.
 

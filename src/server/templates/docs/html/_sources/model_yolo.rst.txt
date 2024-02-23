@@ -1,0 +1,8 @@
+model\_yolo module
+===========
+
+.. automodule:: model_yolo
+   :members:
+   :undoc-members:
+   :special-members:
+   :show-inheritance:

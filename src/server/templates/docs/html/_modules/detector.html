@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>detector &#8212; WebVidoeParser  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for detector</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../server&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">library.helpers.kafka_function</span> <span class="kn">import</span> <span class="n">get_producer</span>
+<span class="kn">from</span> <span class="nn">library.helpers.redis_connect</span> <span class="kn">import</span> <span class="n">RedisConnect</span>
+<span class="kn">from</span> <span class="nn">library.helpers.model_yolo</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+<span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span>
+
+
+<div class="viewcode-block" id="SparkDetector">
+<a class="viewcode-back" href="../detector.html#detector.SparkDetector">[docs]</a>
+<span class="k">class</span> <span class="nc">SparkDetector</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for detecting frames using Spark streaming.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        __spark: The Spark session object.</span>
+<span class="sd">        __spark_stream: The Spark stream object.</span>
+<span class="sd">        __producer: The Kafka producer object.</span>
+<span class="sd">        __redis: The Redis connection object.</span>
+<span class="sd">        __model: The model object for rendering frames.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        __init__: Initializes the SparkDetector class with Spark session, Spark stream, producer, Redis connection, and model.</span>
+<span class="sd">        __enter__: Enters the context management block.</span>
+<span class="sd">        __exit__: Exits the context management block and closes resources.</span>
+<span class="sd">        __get_spark_session: Creates and returns a Spark session.</span>
+<span class="sd">        __get_spark_stream: Creates and returns a Spark stream for reading from Kafka.</span>
+<span class="sd">        __frame_detected: Processes detected frames and sends detection alerts.</span>
+<span class="sd">        run: Runs the Spark stream processing for detecting frames and sending alerts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SparkDetector.__init__">
+<a class="viewcode-back" href="../detector.html#detector.SparkDetector.__init__">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the SparkDetector class with Spark session, Spark stream, producer, Redis connection, and model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__spark</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_spark_session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__spark_stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_spark_stream</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__producer</span> <span class="o">=</span> <span class="n">get_producer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__redis</span> <span class="o">=</span> <span class="n">RedisConnect</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SparkDetector.__enter__">
+<a class="viewcode-back" href="../detector.html#detector.SparkDetector.__enter__">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enters the context management block.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            self The SparkDetector instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="SparkDetector.__exit__">
+<a class="viewcode-back" href="../detector.html#detector.SparkDetector.__exit__">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exits the context management block and closes resources.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            exc_type The type of exception raised.</span>
+<span class="sd">            exc_val The exception value.</span>
+<span class="sd">            exc_tb The exception traceback.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__producer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__redis</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__get_spark_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates and returns a Spark session.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            spark The Spark session object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span> \
+                            <span class="o">.</span><span class="n">appName</span><span class="p">(</span><span class="s1">&#39;DetectorFrame&#39;</span><span class="p">)</span> \
+                            <span class="o">.</span><span class="n">master</span><span class="p">(</span><span class="s2">&quot;local[*]&quot;</span><span class="p">)</span> \
+                            <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;spark.jars.packages&#39;</span><span class="p">,</span> <span class="s1">&#39;org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0&#39;</span><span class="p">)</span> \
+                            <span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">sparkContext</span><span class="o">.</span><span class="n">setLogLevel</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">spark</span>
+
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__get_spark_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates and returns a Spark stream for reading from Kafka.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            stream The Spark stream object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__spark</span><span class="o">.</span><span class="n">readStream</span> \
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;kafka&#39;</span><span class="p">)</span> \
+                             <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;kafka.bootstrap.servers&#39;</span><span class="p">,</span> <span class="s1">&#39;localhost:9092&#39;</span><span class="p">)</span> \
+                             <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;subscribe&#39;</span><span class="p">,</span> <span class="s1">&#39;stream&#39;</span><span class="p">)</span> \
+                             <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;startingOffsets&quot;</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span><span class="p">)</span> \
+                             <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;failOnDataLoss&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">)</span> \
+                             <span class="o">.</span><span class="n">load</span><span class="p">()</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">selectExpr</span><span class="p">(</span><span class="s2">&quot;CAST(value AS STRING)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stream</span>
+
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__frame_detected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_df</span><span class="p">,</span> <span class="n">batch_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Processes detected frames and sends detection alerts.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch_df The DataFrame containing detected frames.</span>
+<span class="sd">            batch_id The ID of the batch.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_collect</span> <span class="o">=</span> <span class="n">batch_df</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">data_row</span> <span class="ow">in</span> <span class="n">data_collect</span><span class="p">:</span>
+            <span class="n">frame_id</span> <span class="o">=</span> <span class="n">data_row</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__model</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">frame_id</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__producer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;detection&#39;</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">frame_id</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">timestamp_ms</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SparkDetector.run">
+<a class="viewcode-back" href="../detector.html#detector.SparkDetector.run">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Runs the Spark stream processing for detecting frames and sending alerts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__spark_stream</span><span class="o">.</span><span class="n">writeStream</span> \
+                           <span class="o">.</span><span class="n">foreachBatch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__frame_detected</span><span class="p">)</span> \
+                           <span class="o">.</span><span class="n">outputMode</span><span class="p">(</span><span class="s1">&#39;append&#39;</span><span class="p">)</span> \
+                           <span class="o">.</span><span class="n">start</span><span class="p">()</span> \
+                           <span class="o">.</span><span class="n">awaitTermination</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">WebVidoeParser</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../starters.html">starters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moduls.html">moduls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../library.html">library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../helpers.html">helpers</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Leo.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

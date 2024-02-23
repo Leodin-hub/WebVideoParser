@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>redis_connect &#8212; WebVidoeParser  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for redis_connect</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../server&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">library.global_variables</span> <span class="kn">import</span> <span class="n">REDIS_PORT</span>
+<span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">redis</span> <span class="kn">import</span> <span class="n">Redis</span>
+
+
+<div class="viewcode-block" id="RedisConnect">
+<a class="viewcode-back" href="../redis_connect.html#redis_connect.RedisConnect">[docs]</a>
+<span class="k">class</span> <span class="nc">RedisConnect</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class for interacting with Redis for storing and retrieving image data.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        connect_redis: The Redis connection object.</span>
+<span class="sd">        id_last_img: The ID of the last stored image.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        __init__: Initializes the RedisConnect class with a Redis connection and sets the initial image ID.</span>
+<span class="sd">        check_connect: Checks the connection status to Redis by pinging.</span>
+<span class="sd">        set: Sets an image in Redis with or without specifying an image ID.</span>
+<span class="sd">        get: Retrieves an image from Redis based on the provided image ID.</span>
+<span class="sd">        stop: Closes the Redis connection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="RedisConnect.__init__">
+<a class="viewcode-back" href="../redis_connect.html#redis_connect.RedisConnect.__init__">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reader</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the RedisConnect class with a Redis connection and sets the initial image ID.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            reader: A boolean flag indicating whether to clear all data when reading.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span> <span class="o">=</span> <span class="n">Redis</span><span class="p">(</span><span class="o">**</span><span class="n">REDIS_PORT</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span><span class="o">.</span><span class="n">flushall</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id_last_img</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="RedisConnect.check_connect">
+<a class="viewcode-back" href="../redis_connect.html#redis_connect.RedisConnect.check_connect">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks the connection status to Redis by pinging.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ping_response: The response from the Redis ping command.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span><span class="o">.</span><span class="n">ping</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RedisConnect.set">
+<a class="viewcode-back" href="../redis_connect.html#redis_connect.RedisConnect.set">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">id_img</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets an image in Redis with or without specifying an image ID.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            img: The image data to store in Redis.</span>
+<span class="sd">            id_img: Optional image ID to store the image with a specific key.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            image_id: The ID of the stored image as a string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">id_img</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">id_img</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id_last_img</span><span class="p">),</span> <span class="n">img</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id_last_img</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id_last_img</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RedisConnect.get">
+<a class="viewcode-back" href="../redis_connect.html#redis_connect.RedisConnect.get">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_img</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieves an image from Redis based on the provided image ID.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            id_img: The ID of the image to retrieve from Redis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            img: The retrieved image data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">id_img</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="RedisConnect.stop">
+<a class="viewcode-back" href="../redis_connect.html#redis_connect.RedisConnect.stop">[docs]</a>
+    <span class="nd">@logger</span><span class="o">.</span><span class="n">catch</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Closes the Redis connection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">WebVidoeParser</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../starters.html">starters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moduls.html">moduls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../library.html">library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../helpers.html">helpers</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Leo.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

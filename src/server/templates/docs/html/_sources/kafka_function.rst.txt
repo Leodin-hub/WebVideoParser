@@ -1,0 +1,7 @@
+kafka\_function module
+===========
+
+.. automodule:: kafka_function
+   :members:
+   :undoc-members:
+   :show-inheritance:

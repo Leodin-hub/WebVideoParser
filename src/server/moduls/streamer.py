@@ -3,6 +3,7 @@ sys.path.append('../server')
 from library.helpers.redis_connect import RedisConnect
 from library.helpers.kafka_function import get_consumer
 from library.global_variables import gen_img
+from loguru import logger
 import asyncio
 
 
@@ -23,13 +24,18 @@ class Streamer:
         - You should call the `__init__` method before accessing the `get_img` method.
         - Use the `get_img` method to continuously retrieve and yield image frames.
     """
+    @logger.catch(level='INFO')
     def __init__(self):
         """Initializes the Streamer class with a Kafka consumer, Redis connection, and initial image data.
         """
         self.consumer = get_consumer('detection')
+        if self.consumer is None:
+            logger.critical('Kafka could not connect to the image')
+            sys.exit()
         self.redis = RedisConnect(False)
         self.img = gen_img('Wait to stream')
 
+    @logger.catch(level='INFO')
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Unsubscribes the Kafka consumer when exiting the context management block.
 
@@ -40,6 +46,7 @@ class Streamer:
         """
         self.consumer.unsubscribe()
 
+    @logger.catch(level='INFO')
     async def get_img(self):
         """A generator function that retrieves image data from Kafka and Redis and yields image frames.
 

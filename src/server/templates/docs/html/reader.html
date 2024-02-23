@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>reader module &#8212; WebVidoeParser  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="server module" href="server.html" />
+    <link rel="prev" title="detector module" href="detector.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="reader-module">
+<h1>reader module<a class="headerlink" href="#reader-module" title="Link to this heading">¶</a></h1>
+<dl class="py class" id="module-reader">
+<dt class="sig sig-object py" id="reader.Reading">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reader.</span></span><span class="sig-name descname"><span class="pre">Reading</span></span><a class="reference internal" href="_modules/reader.html#Reading"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reader.Reading" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for reading video stream frames and processing them using a producer and consumer.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>producer: The producer object for sending processed frame data.
+consumer: The consumer object for receiving video stream URLs.
+redis: The Redis connection object for storing frame data.
+camera: The OpenCV VideoCapture object for capturing frames from the video stream.</p>
+</dd>
+<dt>Methods:</dt><dd><p>__exit__(self, exc_type, exc_val, exc_tb): Unsubscribes the consumer when the instance is exited.
+start(self): Start reading and processing the video stream frames.
+waiting_for_stream(self): Continuously waits for available video stream URLs from the consumer.
+read_stream(self): Reads frames from the video stream, processes and sends them using the producer.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="reader.Reading.__dict__">
+<span class="sig-name descname"><span class="pre">__dict__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">mappingproxy({'__module__':</span> <span class="pre">'reader',</span> <span class="pre">'__doc__':</span> <span class="pre">'Class</span> <span class="pre">for</span> <span class="pre">reading</span> <span class="pre">video</span> <span class="pre">stream</span> <span class="pre">frames</span> <span class="pre">and</span> <span class="pre">processing</span> <span class="pre">them</span> <span class="pre">using</span> <span class="pre">a</span> <span class="pre">producer</span> <span class="pre">and</span> <span class="pre">consumer.\n\n</span>&#160;&#160;&#160; <span class="pre">Attributes:\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">producer:</span> <span class="pre">The</span> <span class="pre">producer</span> <span class="pre">object</span> <span class="pre">for</span> <span class="pre">sending</span> <span class="pre">processed</span> <span class="pre">frame</span> <span class="pre">data.\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">consumer:</span> <span class="pre">The</span> <span class="pre">consumer</span> <span class="pre">object</span> <span class="pre">for</span> <span class="pre">receiving</span> <span class="pre">video</span> <span class="pre">stream</span> <span class="pre">URLs.\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">redis:</span> <span class="pre">The</span> <span class="pre">Redis</span> <span class="pre">connection</span> <span class="pre">object</span> <span class="pre">for</span> <span class="pre">storing</span> <span class="pre">frame</span> <span class="pre">data.\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">camera:</span> <span class="pre">The</span> <span class="pre">OpenCV</span> <span class="pre">VideoCapture</span> <span class="pre">object</span> <span class="pre">for</span> <span class="pre">capturing</span> <span class="pre">frames</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">video</span> <span class="pre">stream.\n\n</span>&#160;&#160;&#160; <span class="pre">Methods:\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">__exit__(self,</span> <span class="pre">exc_type,</span> <span class="pre">exc_val,</span> <span class="pre">exc_tb):</span> <span class="pre">Unsubscribes</span> <span class="pre">the</span> <span class="pre">consumer</span> <span class="pre">when</span> <span class="pre">the</span> <span class="pre">instance</span> <span class="pre">is</span> <span class="pre">exited.\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">start(self):</span> <span class="pre">Start</span> <span class="pre">reading</span> <span class="pre">and</span> <span class="pre">processing</span> <span class="pre">the</span> <span class="pre">video</span> <span class="pre">stream</span> <span class="pre">frames.\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">waiting_for_stream(self):</span> <span class="pre">Continuously</span> <span class="pre">waits</span> <span class="pre">for</span> <span class="pre">available</span> <span class="pre">video</span> <span class="pre">stream</span> <span class="pre">URLs</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">consumer.\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">read_stream(self):</span> <span class="pre">Reads</span> <span class="pre">frames</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">video</span> <span class="pre">stream,</span> <span class="pre">processes</span> <span class="pre">and</span> <span class="pre">sends</span> <span class="pre">them</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">producer.\n</span>&#160;&#160;&#160; <span class="pre">',</span> <span class="pre">'__init__':</span> <span class="pre">&lt;function</span> <span class="pre">Reading.__init__&gt;,</span> <span class="pre">'__exit__':</span> <span class="pre">&lt;function</span> <span class="pre">Reading.__exit__&gt;,</span> <span class="pre">'start':</span> <span class="pre">&lt;function</span> <span class="pre">Reading.start&gt;,</span> <span class="pre">'_Reading__waiting_for_stream':</span> <span class="pre">&lt;function</span> <span class="pre">Reading.__waiting_for_stream&gt;,</span> <span class="pre">'_Reading__read_stream':</span> <span class="pre">&lt;function</span> <span class="pre">Reading.__read_stream&gt;,</span> <span class="pre">'__dict__':</span> <span class="pre">&lt;attribute</span> <span class="pre">'__dict__'</span> <span class="pre">of</span> <span class="pre">'Reading'</span> <span class="pre">objects&gt;,</span> <span class="pre">'__weakref__':</span> <span class="pre">&lt;attribute</span> <span class="pre">'__weakref__'</span> <span class="pre">of</span> <span class="pre">'Reading'</span> <span class="pre">objects&gt;,</span> <span class="pre">'__annotations__':</span> <span class="pre">{}})</span></em><a class="headerlink" href="#reader.Reading.__dict__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reader.Reading.__exit__">
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/reader.html#Reading.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reader.Reading.__exit__" title="Link to this definition">¶</a></dt>
+<dd><p>Unsubscribe the consumer when exiting the context management block.</p>
+<p>This method is called when the instance is exited, and it ensures that the consumer
+is unsubscribed from the video stream topic.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>exc_type: The type of exception raised.
+exc_val: The exception value.
+exc_tb: The exception traceback.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reader.Reading.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/reader.html#Reading.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reader.Reading.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the Reading class with necessary attributes.</p>
+<p>The __init__ method sets up the Reading class with the producer, consumer, Redis connection, and VideoCapture object.
+These objects are necessary for reading and processing video stream frames.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="reader.Reading.__module__">
+<span class="sig-name descname"><span class="pre">__module__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reader'</span></em><a class="headerlink" href="#reader.Reading.__module__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reader.Reading.__read_stream">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__read_stream</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reader.Reading.__read_stream" title="Link to this definition">¶</a></dt>
+<dd><p>Read frames from the video stream and process them.</p>
+<p>The read_stream method reads frames from the video stream, converts them to RGB format,
+encodes them as JPEG images, stores them in Redis, and sends them using the producer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reader.Reading.__waiting_for_stream">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__waiting_for_stream</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reader.Reading.__waiting_for_stream" title="Link to this definition">¶</a></dt>
+<dd><p>Continuously wait for video stream URLs from the consumer.</p>
+<p>This method continuously polls the consumer for available video stream URLs. When a new URL is received,
+it updates the VideoCapture object with the new stream and checks the connection status.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="reader.Reading.__weakref__">
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#reader.Reading.__weakref__" title="Link to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reader.Reading.start">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/reader.html#Reading.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reader.Reading.start" title="Link to this definition">¶</a></dt>
+<dd><p>Start reading and processing the video stream frames.</p>
+<p>The start method initiates the reading and processing of video stream frames. It creates
+and runs asynchronous tasks for waiting for stream URLs and reading the frames.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">WebVidoeParser</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="starters.html">starters</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="moduls.html">moduls</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="detector.html">detector module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">reader module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server.html">server module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="streamer.html">streamer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">helpers</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="moduls.html">moduls</a><ul>
+      <li>Previous: <a href="detector.html" title="previous chapter">detector module</a></li>
+      <li>Next: <a href="server.html" title="next chapter">server module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Leo.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/reader.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
