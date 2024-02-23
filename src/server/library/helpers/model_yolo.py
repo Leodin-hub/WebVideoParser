@@ -2,6 +2,7 @@ from loguru import logger
 import numpy as np
 import yolov5
 import cv2
+import os
 
 
 class Model:
@@ -23,7 +24,7 @@ class Model:
     def __init__(self):
         """Initializes the Model class with default YOLOv5 model parameters.
         """
-        self.model = yolov5.load('moduls/yolov5s.pt')
+        self.model = yolov5.load(os.path.dirname(__file__) + '/yolov5s.pt')
         self.model.conf = 0.25
         self.model.iou = 0.45
         self.model.agnostic = False

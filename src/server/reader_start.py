@@ -1,7 +1,9 @@
+import os
+import sys
+sys.path.append(os.path.dirname(__file__))
 from moduls.reader import Reading
 from loguru import logger
 import asyncio
-import sys
 
 
 @logger.catch(level='INFO')

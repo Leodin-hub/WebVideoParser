@@ -1,5 +1,6 @@
+import os
 import sys
-sys.path.append('../server')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from library.helpers.redis_connect import RedisConnect
 from library.helpers.kafka_function import get_consumer
 from library.global_variables import gen_img

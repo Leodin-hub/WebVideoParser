@@ -1,5 +1,6 @@
+import os
 import sys
-sys.path.append('../server')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from library.global_variables import REDIS_PORT
 from loguru import logger
 from redis import Redis

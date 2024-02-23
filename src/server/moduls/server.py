@@ -1,12 +1,10 @@
 import os
 import sys
-
-sys.path.append('../server')
-from fastapi.responses import StreamingResponse, FileResponse
-from fastapi_utils.inferring_router import InferringRouter
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from library.helpers.kafka_function import get_producer, delete_topic, init_topic
+from fastapi_utils.inferring_router import InferringRouter
+from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
-from kafka.errors import NoBrokersAvailable
 from fastapi import FastAPI, Request, Form
 from moduls.streamer import Streamer
 from fastapi_utils.cbv import cbv
@@ -20,14 +18,10 @@ def run_server():
     Returns:
         FastAPI: FastAPI application with defined routes and endpoints.
     """
+    delete_topic()
+    init_topic()
     app = FastAPI()
     router = InferringRouter()
-    try:
-        delete_topic()
-        init_topic()
-    except NoBrokersAvailable:
-        logger.critical('Kafka could not connect to the image')
-        sys.exit()
 
     @cbv(router)
     class MainServer:
@@ -36,7 +30,7 @@ def run_server():
         @logger.catch(level='INFO')
         def __init__(self):
             """Initialize MainServer class with necessary attributes."""
-            self.templates = Jinja2Templates(directory='templates')
+            self.templates = Jinja2Templates(directory=os.path.join(sys.path[-1], 'templates'))
             self.streamer = Streamer()
             self.producer = get_producer()
 

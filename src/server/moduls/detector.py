@@ -1,5 +1,6 @@
+import os
 import sys
-sys.path.append('../server')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from library.helpers.kafka_function import get_producer
 from library.helpers.redis_connect import RedisConnect
 from library.helpers.model_yolo import Model
